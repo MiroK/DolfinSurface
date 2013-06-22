@@ -253,12 +253,25 @@ void VTKWriter::write_ascii_mesh(const Mesh& mesh, std::size_t cell_dim,
   // Write cell connectivity
   file << "<Cells>" << std::endl;
   file << "<DataArray  type=\"UInt32\"  Name=\"connectivity\"  format=\"" << "ascii" << "\">";
-  for (MeshEntityIterator c(mesh, cell_dim); !c.end(); ++c)
+  
+  if(cell_dim == 0)
   {
-    for (VertexIterator v(*c); !v.end(); ++v)
-      file << v->index() << " ";
+    for(MeshEntityIterator c(mesh, cell_dim); !c.end(); ++c)
+    {
+      file << c->index() << " ";
+    }
     file << " ";
   }
+  else
+  {
+    for (MeshEntityIterator c(mesh, cell_dim); !c.end(); ++c)
+    {
+      for (VertexIterator v(*c); !v.end(); ++v)
+        file << v->index() << " ";
+      file << " ";
+    }
+  }
+
   file << "</DataArray>" << std::endl;
 
   // Write offset into connectivity array for the end of each cell
@@ -319,10 +332,21 @@ void VTKWriter::write_base64_mesh(const Mesh& mesh, std::size_t cell_dim,
   const int size = num_cells*num_cell_vertices;
   std::vector<boost::uint32_t> cell_data(size);
   std::vector<boost::uint32_t>::iterator cell_entry = cell_data.begin();
-  for (MeshEntityIterator c(mesh, cell_dim); !c.end(); ++c)
+  
+  if(cell_dim == 0)
   {
-    for (VertexIterator v(*c); !v.end(); ++v)
-      *cell_entry++ = v->index();
+    for (MeshEntityIterator c(mesh, cell_dim); !c.end(); ++c)
+    {
+      *cell_entry++ = c->index();
+    }
+  }
+  else
+  {
+    for (MeshEntityIterator c(mesh, cell_dim); !c.end(); ++c)
+    {
+      for (VertexIterator v(*c); !v.end(); ++v)
+        *cell_entry++ = v->index();
+    }
   }
 
   // Create encoded stream
